@@ -102,7 +102,7 @@ function bitmapToIndex(shift, bitmap) {
     return hash;
 }
 
-function updateCollisionList(hash, list, get, key, size) {
+function newCollisionList(hash, list, get, key, size) {
     var length = list.length;
     for (var i = 0; i < length; ++i) {
         var child = list[i];
@@ -133,7 +133,7 @@ var CollisionNode = (function () {
     }
     CollisionNode.prototype.modify = function (shift, get, hash, key, size) {
         if (hash === this.hash) {
-            var list = updateCollisionList(this.hash, this.children, get, key, size);
+            var list = newCollisionList(this.hash, this.children, get, key, size);
             if (list === this.children)
                 return this;
             return list.length > 1
@@ -144,12 +144,12 @@ var CollisionNode = (function () {
         if (value === NOTHING)
             return this;
         ++size.value;
-        return mergeLeaves(shift, this.hash, this, hash, new LeafNode(hash, key, value));
+        return combineLeafNodes(shift, this.hash, this, hash, new LeafNode(hash, key, value));
     };
     return CollisionNode;
 }());
 
-function pack(count, index, children) {
+function toIndexNode(count, index, children) {
     var newChildren = new Array(count - 1);
     var g = 0;
     var bitmap = 0;
@@ -162,7 +162,7 @@ function pack(count, index, children) {
             }
         }
     }
-    return new IndexNode(bitmap, newChildren);
+    return new IndexedNode(bitmap, newChildren);
 }
 
 var ArrayNode = (function () {
@@ -182,7 +182,7 @@ var ArrayNode = (function () {
             return new ArrayNode(count + 1, replace(fragment, newChild, children));
         if (!isEmptyNode(child) && isEmptyNode(newChild))
             return count - 1 <= MIN_ARRAY_NODE
-                ? pack(count, fragment, children)
+                ? toIndexNode(count, fragment, children)
                 : new ArrayNode(count - 1, replace(fragment, empty$1(), children));
         return new ArrayNode(count, replace(fragment, newChild, children));
     };
@@ -192,7 +192,7 @@ function isEmptyNode(node) {
     return node.type === NodeType.EMPTY;
 }
 
-function expand(fragment, child, bitmap, children) {
+function toArrayNode(fragment, child, bitmap, children) {
     var array = [];
     var bit = bitmap;
     var count = 0;
@@ -205,13 +205,13 @@ function expand(fragment, child, bitmap, children) {
     return new ArrayNode(count + 1, array);
 }
 
-var IndexNode = (function () {
-    function IndexNode(mask, children) {
+var IndexedNode = (function () {
+    function IndexedNode(mask, children) {
         this.type = NodeType.INDEX;
         this.mask = mask;
         this.children = children;
     }
-    IndexNode.prototype.modify = function (shift, get, hash, key, size) {
+    IndexedNode.prototype.modify = function (shift, get, hash, key, size) {
         var _a = this, mask = _a.mask, children = _a.children;
         var fragment = hashFragment(shift, hash);
         var bit = toBitmap(fragment);
@@ -227,16 +227,16 @@ var IndexNode = (function () {
                 return empty$1();
             return children.length <= 2 && isLeaf(children[index ^ 1])
                 ? children[index ^ 1]
-                : new IndexNode(bitmap, remove(index, children));
+                : new IndexedNode(bitmap, remove(index, children));
         }
         if (!exists && child.type !== NodeType.EMPTY) {
             return children.length >= MAX_INDEX_NODE
-                ? expand(fragment, child, mask, children)
-                : new IndexNode(mask | bit, insert(index, child, children));
+                ? toArrayNode(fragment, child, mask, children)
+                : new IndexedNode(mask | bit, insert(index, child, children));
         }
-        return new IndexNode(mask, replace(index, child, children));
+        return new IndexedNode(mask, replace(index, child, children));
     };
-    return IndexNode;
+    return IndexedNode;
 }());
 function isLeaf(node) {
     var type = node.type;
@@ -245,13 +245,13 @@ function isLeaf(node) {
         type === NodeType.COLLISION;
 }
 
-function mergeLeaves(shift, hash1, leafNode1, hash2, leafNode2) {
+function combineLeafNodes(shift, hash1, leafNode1, hash2, leafNode2) {
     if (hash1 === hash2)
         return new CollisionNode(hash1, [leafNode2, leafNode1]);
     var fragment1 = hashFragment(shift, hash1);
     var fragment2 = hashFragment(shift, hash2);
-    return new IndexNode(toBitmap(fragment1) | toBitmap(fragment2), fragment1 === fragment2
-        ? [mergeLeaves(shift + SIZE, hash1, leafNode1, hash2, leafNode2)]
+    return new IndexedNode(toBitmap(fragment1) | toBitmap(fragment2), fragment1 === fragment2
+        ? [combineLeafNodes(shift + SIZE, hash1, leafNode1, hash2, leafNode2)]
         : fragment1 < fragment2 ? [leafNode1, leafNode2] : [leafNode2, leafNode1]);
 }
 
@@ -277,7 +277,7 @@ var LeafNode = (function () {
         if (value === NOTHING)
             return this;
         ++size.value;
-        return mergeLeaves(shift, this.hash, this, hash, new LeafNode(hash, key, value));
+        return combineLeafNodes(shift, this.hash, this, hash, new LeafNode(hash, key, value));
     };
     return LeafNode;
 }());
