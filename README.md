@@ -25,6 +25,7 @@ npm install --save @typed/hashmap
 
 ## Todo
 
+- [ ] `remove<K, V>(key: K, map: HashMap<K, V>): HashMap<K, V>`
 - [ ] Implement Iterable interface
 - [ ] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;`
 - [ ] `keys<K, V>(map: HashMap<K, V>): Array<K>;`
