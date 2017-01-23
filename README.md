@@ -37,7 +37,7 @@ npm install --save @typed/hashmap
 
 ## API
 
-All multi-paremeter functions are curried!
+All multi-parameter functions are curried!
 
 ### Creating a HashMap
 
