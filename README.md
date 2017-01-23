@@ -118,7 +118,7 @@ console.log(get('a', a)) // 1
 
 Returns true if a map contains a particular key and false if it does not.
 
-```
+```typescript
 import { empty, has, set } from '@typed/hashmap';
 
 const hasA = has('a');
