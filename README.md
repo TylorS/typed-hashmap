@@ -26,11 +26,11 @@ npm install --save @typed/hashmap
 ## Todo
 
 - [ ] Implement Iterable interface
-- [ ] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;
-- [ ] `keys<K, V>(map: HashMap<K, V>): Array<K>;
-- [ ] `values<K, V>(map: HashMap<K, V>): Array<V>;
-- [ ] `reduce<K, V, R>(f: (seed: R, value: V) => R, seed: R, map: HashMap<K, V>): R;
-- [ ] `map<K, V, R>(f: (value: V) => R, map: HashMap<K, V>): HashMap<K, R>;
+- [ ] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;`
+- [ ] `keys<K, V>(map: HashMap<K, V>): Array<K>;`
+- [ ] `values<K, V>(map: HashMap<K, V>): Array<V>;`
+- [ ] `reduce<K, V, R>(f: (seed: R, value: V) => R, seed: R, map: HashMap<K, V>): R;`
+- [ ] `map<K, V, R>(f: (value: V) => R, map: HashMap<K, V>): HashMap<K, R>;`
 
 - [ ] Create `flow` typings for flowtype users (help wanted!)
 
