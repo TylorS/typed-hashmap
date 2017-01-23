@@ -8,9 +8,9 @@ This is heavily based off of [hamt](https://github.com/mattbierner/hamt) and
 was mainly done by me for learning purposes, but it is likely very useful, and I
 plan to use it as well.
 
-Once main difference to the hamt library is that by default
-keys can be of any type including objects or arrays much like ES2015 `Map`s.
-Another notable differences is there are **not** prototype methods to allow
+Once main difference to the hamt library is that keys can be of any type
+including objects or arrays much like ES2015 `Map`s.
+Another notable change is there are **not** prototype methods to allow
 for ES2015 modules to be tree-shaken for smaller builds :fire:
 
 There is a heavy emphasis on typing this library, and it's highly recommended
