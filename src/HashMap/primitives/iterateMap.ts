@@ -7,7 +7,6 @@ export function iterator<K, V, R>(
   return new HashMapIterator<K, V, R>(lazyVisit(node, f, []));
 }
 
-
 class HashMapIterator<K, V, R> implements Iterator<R> {
   constructor(private _iterate: { value: R, rest: Array<any> }) { }
 
@@ -65,7 +64,6 @@ function lazyVisitChildren<K, V, R>(
 
   return continuation(k);
 };
-
 
 function notEmptyNode<K, V>(node: Node<K, V>): boolean {
   return node && node.type !== NodeType.EMPTY;

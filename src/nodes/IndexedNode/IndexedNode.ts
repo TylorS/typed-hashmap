@@ -1,6 +1,5 @@
 import { Indexed, Node, NodeType, ChildrenNodes, ChildNode } from '../types';
 import { empty } from '../EmptyNode';
-import { LeafNode } from '../LeafNode';
 import {
   SIZE,
   MAX_INDEX_NODE,

@@ -1,4 +1,4 @@
-import { NodeType, ListNode, Node, ChildrenNodes, ChildNode } from '../types';
+import { NodeType, ListNode, Node } from '../types';
 import { empty } from '../EmptyNode';
 import { SIZE, MIN_ARRAY_NODE, replace, hashFragment } from '../../common';
 import { toIndexNode } from './toIndexNode';
