@@ -14,6 +14,7 @@
     "build": "northbrook tsc && rimraf lib dist && rollup -c && npm run uglify",
     "uglify": "uglifyjs dist/typed-hashmap.js -o dist/typed-hashmap.min.js",
     "preversion": "npm run build",
+    "postversion": "git add dist/ && git commit -m 'chore(dist): build dist'",
     "release": "northbrook release"
   },
   "repository": {
