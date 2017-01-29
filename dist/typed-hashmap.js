@@ -4,307 +4,6 @@
 	(factory((global.typedHashMap = global.typedHashMap || {})));
 }(this, (function (exports) { 'use strict';
 
-var HashMap = (function () {
-    function HashMap(node, size) {
-        this.node = node;
-        this.size = size;
-    }
-    return HashMap;
-}());
-
-var NodeType;
-(function (NodeType) {
-    NodeType[NodeType["EMPTY"] = 0] = "EMPTY";
-    NodeType[NodeType["LEAF"] = 1] = "LEAF";
-    NodeType[NodeType["COLLISION"] = 2] = "COLLISION";
-    NodeType[NodeType["INDEX"] = 3] = "INDEX";
-    NodeType[NodeType["ARRAY"] = 4] = "ARRAY";
-})(NodeType || (NodeType = {}));
-
-var NOTHING = Object.create(null);
-
-/**
- * Immutable replacement of a value at a given index
- */
-/**
- * Immutable replacement of a value at a given index
- */ function replace(index, value, array) {
-    var length = array.length;
-    var newArray = Array(length);
-    for (var i = 0; i < length; ++i) {
-        newArray[i] = array[i];
-    }
-    newArray[index] = value;
-    return newArray;
-}
-/**
- * Immutable removal of a value at given index
- */
-function remove(index, array) {
-    var length = array.length;
-    if (length === 0 || index >= length)
-        return array;
-    if (length === 1)
-        return [];
-    var newArray = Array(length - 1);
-    var i = 0;
-    for (; i < index; ++i)
-        newArray[i] = array[i];
-    for (i = i + 1; i < length; ++i)
-        newArray[i - 1] = array[i];
-    return newArray;
-}
-/**
- * Immutable insertion of a value at a given index
- */
-function insert(index, value, array) {
-    var length = array.length;
-    var newArray = Array(length - 1);
-    var i = 0;
-    for (; i < index; ++i)
-        newArray[i] = array[i];
-    newArray[i++] = value;
-    for (; i < length; ++i)
-        newArray[i] = array[i - 1];
-    return newArray;
-}
-
-var SIZE = 5;
-var BUCKET_SIZE = Math.pow(2, SIZE);
-var MASK = BUCKET_SIZE - 1;
-var MAX_INDEX_NODE = BUCKET_SIZE / 2;
-var MIN_ARRAY_NODE = BUCKET_SIZE / 4;
-
-function hammingWeight(num) {
-    num = num - ((num >> 1) & 0x55555555);
-    num = (num & 0x33333333) + ((num >> 2) & 0x33333333);
-    return ((num + (num >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-}
-function hashFragment(shift, hash) {
-    return (hash >>> shift) & MASK;
-}
-function toBitmap(num) {
-    return 1 << num;
-}
-function bitmapToIndex(shift, bitmap) {
-    return hammingWeight(shift & (bitmap - 1));
-}
-
-/**
- * Generator of 32 bit hashes of given string
- */
-/**
- * Generator of 32 bit hashes of given string
- */ function stringHash(str) {
-    var hash = 0;
-    for (var i = 0; i < str.length; ++i)
-        hash = (((hash << 5) - hash) + str.charCodeAt(i)) | 0;
-    return hash;
-}
-
-function newCollisionList(hash, list, get, key, size) {
-    var length = list.length;
-    for (var i = 0; i < length; ++i) {
-        var child = list[i];
-        if (child.key === key) {
-            var value = child.value;
-            var newValue_1 = get(value);
-            if (newValue_1 === value)
-                return list;
-            if (newValue_1 === NOTHING) {
-                --size.value;
-                return remove(i, list);
-            }
-            return insert(i, new LeafNode(hash, key, newValue_1), list);
-        }
-    }
-    var newValue = get();
-    if (newValue === NOTHING)
-        return list;
-    ++size.value;
-    return insert(length, new LeafNode(hash, key, newValue), list);
-}
-
-var CollisionNode = (function () {
-    function CollisionNode(hash, children) {
-        this.type = NodeType.COLLISION;
-        this.hash = hash;
-        this.children = children;
-    }
-    CollisionNode.prototype.modify = function (shift, get, hash, key, size) {
-        if (hash === this.hash) {
-            var list = newCollisionList(this.hash, this.children, get, key, size);
-            if (list === this.children)
-                return this;
-            return list.length > 1
-                ? new CollisionNode(this.hash, list)
-                : list[0];
-        }
-        var value = get();
-        if (value === NOTHING)
-            return this;
-        ++size.value;
-        return combineLeafNodes(shift, this.hash, this, hash, new LeafNode(hash, key, value));
-    };
-    return CollisionNode;
-}());
-
-function toIndexNode(count, index, children) {
-    var newChildren = new Array(count - 1);
-    var g = 0;
-    var bitmap = 0;
-    for (var i = 0; i < children.length; ++i) {
-        if (i !== index) {
-            var child = children[i];
-            if (child && child.type > NodeType.EMPTY) {
-                newChildren[g++] = child;
-                bitmap |= 1 << i;
-            }
-        }
-    }
-    return new IndexedNode(bitmap, newChildren);
-}
-
-var ArrayNode = (function () {
-    function ArrayNode(size, children) {
-        this.type = NodeType.ARRAY;
-        this.size = size;
-        this.children = children;
-    }
-    ArrayNode.prototype.modify = function (shift, get, hash, key, size) {
-        var _a = this, count = _a.size, children = _a.children;
-        var fragment = hashFragment(shift, hash);
-        var child = children[fragment];
-        var newChild = (child || empty$1()).modify(shift + SIZE, get, hash, key, size);
-        if (child === newChild)
-            return this;
-        if (isEmptyNode(child) && !isEmptyNode(newChild))
-            return new ArrayNode(count + 1, replace(fragment, newChild, children));
-        if (!isEmptyNode(child) && isEmptyNode(newChild))
-            return count - 1 <= MIN_ARRAY_NODE
-                ? toIndexNode(count, fragment, children)
-                : new ArrayNode(count - 1, replace(fragment, empty$1(), children));
-        return new ArrayNode(count, replace(fragment, newChild, children));
-    };
-    return ArrayNode;
-}());
-function isEmptyNode(node) {
-    return node && node.type === NodeType.EMPTY;
-}
-
-function toArrayNode(fragment, child, bitmap, children) {
-    var array = [];
-    var bit = bitmap;
-    var count = 0;
-    for (var i = 0; bit; ++i) {
-        if (bit & 1)
-            array[i] = children[count++];
-        bit >>>= 1;
-    }
-    array[fragment] = child;
-    return new ArrayNode(count + 1, array);
-}
-
-var IndexedNode = (function () {
-    function IndexedNode(mask, children) {
-        this.type = NodeType.INDEX;
-        this.mask = mask;
-        this.children = children;
-    }
-    IndexedNode.prototype.modify = function (shift, get, hash, key, size) {
-        var _a = this, mask = _a.mask, children = _a.children;
-        var fragment = hashFragment(shift, hash);
-        var bit = toBitmap(fragment);
-        var index = bitmapToIndex(mask, bit);
-        var exists = Boolean(mask & bit);
-        var current = exists ? children[index] : empty$1();
-        var child = current.modify(shift + SIZE, get, hash, key, size);
-        if (current === child)
-            return this;
-        if (exists && child.type === NodeType.EMPTY) {
-            var bitmap = mask & ~bit;
-            if (!bitmap)
-                return empty$1();
-            return children.length <= 2 && isLeaf(children[index ^ 1])
-                ? children[index ^ 1]
-                : new IndexedNode(bitmap, remove(index, children));
-        }
-        if (!exists && child.type !== NodeType.EMPTY) {
-            return children.length >= MAX_INDEX_NODE
-                ? toArrayNode(fragment, child, mask, children)
-                : new IndexedNode(mask | bit, insert(index, child, children));
-        }
-        return new IndexedNode(mask, replace(index, child, children));
-    };
-    return IndexedNode;
-}());
-function isLeaf(node) {
-    var type = node.type;
-    return type === NodeType.EMPTY ||
-        type === NodeType.LEAF ||
-        type === NodeType.COLLISION;
-}
-
-function combineLeafNodes(shift, hash1, leafNode1, hash2, leafNode2) {
-    if (hash1 === hash2)
-        return new CollisionNode(hash1, [leafNode2, leafNode1]);
-    var fragment1 = hashFragment(shift, hash1);
-    var fragment2 = hashFragment(shift, hash2);
-    return new IndexedNode(toBitmap(fragment1) | toBitmap(fragment2), fragment1 === fragment2
-        ? [combineLeafNodes(shift + SIZE, hash1, leafNode1, hash2, leafNode2)]
-        : fragment1 < fragment2 ? [leafNode1, leafNode2] : [leafNode2, leafNode1]);
-}
-
-var LeafNode = (function () {
-    function LeafNode(hash, key, value) {
-        this.type = NodeType.LEAF;
-        this.hash = hash;
-        this.key = key;
-        this.value = value;
-    }
-    LeafNode.prototype.modify = function (shift, get, hash, key, size) {
-        if (key === this.key) {
-            var value_1 = get(this.value);
-            if (value_1 === this.value)
-                return this;
-            if (value_1 === NOTHING) {
-                --size.value;
-                return empty$1();
-            }
-            return new LeafNode(hash, key, value_1);
-        }
-        var value = get();
-        if (value === NOTHING)
-            return this;
-        ++size.value;
-        return combineLeafNodes(shift, this.hash, this, hash, new LeafNode(hash, key, value));
-    };
-    return LeafNode;
-}());
-
-var EmptyNode = (function () {
-    function EmptyNode() {
-        this.type = NodeType.EMPTY;
-    }
-    EmptyNode.prototype.modify = function (shift, get, hash, key, size) {
-        var value = get(void shift);
-        if (value === NOTHING)
-            return this;
-        ++size.value;
-        return new LeafNode(hash, key, value);
-    };
-    return EmptyNode;
-}());
-var EMPTY = new EmptyNode();
-function empty$1() {
-    return EMPTY;
-}
-
-var EMPTY_MAP = new HashMap(EMPTY, 0);
-function empty$$1() {
-    return EMPTY_MAP;
-}
-
 /**
  * Removes all key-value entries from the list cache.
  *
@@ -545,7 +244,7 @@ var freeSelf = typeof self == 'object' && self && self.Object === Object && self
 var root = freeGlobal || freeSelf || Function('return this')();
 
 /** Built-in value references. */
-var Symbol = root.Symbol;
+var Symbol$1 = root.Symbol;
 
 /** Used for built-in method references. */
 var objectProto$2 = Object.prototype;
@@ -561,7 +260,7 @@ var hasOwnProperty$2 = objectProto$2.hasOwnProperty;
 var nativeObjectToString = objectProto$2.toString;
 
 /** Built-in value references. */
-var symToStringTag$1 = Symbol ? Symbol.toStringTag : undefined;
+var symToStringTag$1 = Symbol$1 ? Symbol$1.toStringTag : undefined;
 
 /**
  * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
@@ -616,7 +315,7 @@ var nullTag = '[object Null]';
 var undefinedTag = '[object Undefined]';
 
 /** Built-in value references. */
-var symToStringTag = Symbol ? Symbol.toStringTag : undefined;
+var symToStringTag = Symbol$1 ? Symbol$1.toStringTag : undefined;
 
 /**
  * The base implementation of `getTag` without fallbacks for buggy environments.
@@ -1333,7 +1032,7 @@ var arrayBufferTag = '[object ArrayBuffer]';
 var dataViewTag = '[object DataView]';
 
 /** Used to convert symbols to primitives and strings. */
-var symbolProto = Symbol ? Symbol.prototype : undefined;
+var symbolProto = Symbol$1 ? Symbol$1.prototype : undefined;
 var symbolValueOf = symbolProto ? symbolProto.valueOf : undefined;
 
 /**
@@ -2309,6 +2008,294 @@ function isEqual(value, other) {
   return baseIsEqual(value, other);
 }
 
+var NodeType;
+(function (NodeType) {
+    NodeType[NodeType["EMPTY"] = 0] = "EMPTY";
+    NodeType[NodeType["LEAF"] = 1] = "LEAF";
+    NodeType[NodeType["COLLISION"] = 2] = "COLLISION";
+    NodeType[NodeType["INDEX"] = 3] = "INDEX";
+    NodeType[NodeType["ARRAY"] = 4] = "ARRAY";
+})(NodeType || (NodeType = {}));
+
+var NOTHING = Object.create(null);
+
+/**
+ * Immutable replacement of a value at a given index
+ */
+/**
+ * Immutable replacement of a value at a given index
+ */ function replace(index, value, array) {
+    var length = array.length;
+    var newArray = Array(length);
+    for (var i = 0; i < length; ++i) {
+        newArray[i] = array[i];
+    }
+    newArray[index] = value;
+    return newArray;
+}
+/**
+ * Immutable removal of a value at given index
+ */
+function remove(index, array) {
+    var length = array.length;
+    if (length === 0 || index >= length)
+        return array;
+    if (length === 1)
+        return [];
+    var newArray = Array(length - 1);
+    var i = 0;
+    for (; i < index; ++i)
+        newArray[i] = array[i];
+    for (i = i + 1; i < length; ++i)
+        newArray[i - 1] = array[i];
+    return newArray;
+}
+/**
+ * Immutable insertion of a value at a given index
+ */
+function insert(index, value, array) {
+    var length = array.length;
+    var newArray = Array(length - 1);
+    var i = 0;
+    for (; i < index; ++i)
+        newArray[i] = array[i];
+    newArray[i++] = value;
+    for (; i < length; ++i)
+        newArray[i] = array[i - 1];
+    return newArray;
+}
+
+var SIZE = 5;
+var BUCKET_SIZE = Math.pow(2, SIZE);
+var MASK = BUCKET_SIZE - 1;
+var MAX_INDEX_NODE = BUCKET_SIZE / 2;
+var MIN_ARRAY_NODE = BUCKET_SIZE / 4;
+
+function hammingWeight(num) {
+    num = num - ((num >> 1) & 0x55555555);
+    num = (num & 0x33333333) + ((num >> 2) & 0x33333333);
+    return ((num + (num >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+}
+function hashFragment(shift, hash) {
+    return (hash >>> shift) & MASK;
+}
+function toBitmap(num) {
+    return 1 << num;
+}
+function bitmapToIndex(shift, bitmap) {
+    return hammingWeight(shift & (bitmap - 1));
+}
+
+/**
+ * Generator of 32 bit hashes of given string
+ */
+/**
+ * Generator of 32 bit hashes of given string
+ */ function stringHash(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; ++i)
+        hash = (((hash << 5) - hash) + str.charCodeAt(i)) | 0;
+    return hash;
+}
+
+function newCollisionList(hash, list, get, key, size) {
+    var length = list.length;
+    for (var i = 0; i < length; ++i) {
+        var child = list[i];
+        if (child.key === key) {
+            var value = child.value;
+            var newValue_1 = get(value);
+            if (newValue_1 === value)
+                return list;
+            if (newValue_1 === NOTHING) {
+                --size.value;
+                return remove(i, list);
+            }
+            return insert(i, new LeafNode(hash, key, newValue_1), list);
+        }
+    }
+    var newValue = get();
+    if (newValue === NOTHING)
+        return list;
+    ++size.value;
+    return insert(length, new LeafNode(hash, key, newValue), list);
+}
+
+var CollisionNode = (function () {
+    function CollisionNode(hash, children) {
+        this.type = NodeType.COLLISION;
+        this.hash = hash;
+        this.children = children;
+    }
+    CollisionNode.prototype.modify = function (shift, get, hash, key, size) {
+        if (hash === this.hash) {
+            var list = newCollisionList(this.hash, this.children, get, key, size);
+            if (list === this.children)
+                return this;
+            return list.length > 1
+                ? new CollisionNode(this.hash, list)
+                : list[0];
+        }
+        var value = get();
+        if (value === NOTHING)
+            return this;
+        ++size.value;
+        return combineLeafNodes(shift, this.hash, this, hash, new LeafNode(hash, key, value));
+    };
+    return CollisionNode;
+}());
+
+function toIndexNode(count, index, children) {
+    var newChildren = new Array(count - 1);
+    var g = 0;
+    var bitmap = 0;
+    for (var i = 0; i < children.length; ++i) {
+        if (i !== index) {
+            var child = children[i];
+            if (child && child.type > NodeType.EMPTY) {
+                newChildren[g++] = child;
+                bitmap |= 1 << i;
+            }
+        }
+    }
+    return new IndexedNode(bitmap, newChildren);
+}
+
+var ArrayNode = (function () {
+    function ArrayNode(size, children) {
+        this.type = NodeType.ARRAY;
+        this.size = size;
+        this.children = children;
+    }
+    ArrayNode.prototype.modify = function (shift, get, hash, key, size) {
+        var _a = this, count = _a.size, children = _a.children;
+        var fragment = hashFragment(shift, hash);
+        var child = children[fragment];
+        var newChild = (child || empty()).modify(shift + SIZE, get, hash, key, size);
+        if (child === newChild)
+            return this;
+        if (isEmptyNode(child) && !isEmptyNode(newChild))
+            return new ArrayNode(count + 1, replace(fragment, newChild, children));
+        if (!isEmptyNode(child) && isEmptyNode(newChild))
+            return count - 1 <= MIN_ARRAY_NODE
+                ? toIndexNode(count, fragment, children)
+                : new ArrayNode(count - 1, replace(fragment, empty(), children));
+        return new ArrayNode(count, replace(fragment, newChild, children));
+    };
+    return ArrayNode;
+}());
+function isEmptyNode(node) {
+    return node && node.type === NodeType.EMPTY;
+}
+
+function toArrayNode(fragment, child, bitmap, children) {
+    var array = [];
+    var bit = bitmap;
+    var count = 0;
+    for (var i = 0; bit; ++i) {
+        if (bit & 1)
+            array[i] = children[count++];
+        bit >>>= 1;
+    }
+    array[fragment] = child;
+    return new ArrayNode(count + 1, array);
+}
+
+var IndexedNode = (function () {
+    function IndexedNode(mask, children) {
+        this.type = NodeType.INDEX;
+        this.mask = mask;
+        this.children = children;
+    }
+    IndexedNode.prototype.modify = function (shift, get, hash, key, size) {
+        var _a = this, mask = _a.mask, children = _a.children;
+        var fragment = hashFragment(shift, hash);
+        var bit = toBitmap(fragment);
+        var index = bitmapToIndex(mask, bit);
+        var exists = Boolean(mask & bit);
+        var current = exists ? children[index] : empty();
+        var child = current.modify(shift + SIZE, get, hash, key, size);
+        if (current === child)
+            return this;
+        if (exists && child.type === NodeType.EMPTY) {
+            var bitmap = mask & ~bit;
+            if (!bitmap)
+                return empty();
+            return children.length <= 2 && isLeaf(children[index ^ 1])
+                ? children[index ^ 1]
+                : new IndexedNode(bitmap, remove(index, children));
+        }
+        if (!exists && child.type !== NodeType.EMPTY) {
+            return children.length >= MAX_INDEX_NODE
+                ? toArrayNode(fragment, child, mask, children)
+                : new IndexedNode(mask | bit, insert(index, child, children));
+        }
+        return new IndexedNode(mask, replace(index, child, children));
+    };
+    return IndexedNode;
+}());
+function isLeaf(node) {
+    var type = node.type;
+    return type === NodeType.EMPTY ||
+        type === NodeType.LEAF ||
+        type === NodeType.COLLISION;
+}
+
+function combineLeafNodes(shift, hash1, leafNode1, hash2, leafNode2) {
+    if (hash1 === hash2)
+        return new CollisionNode(hash1, [leafNode2, leafNode1]);
+    var fragment1 = hashFragment(shift, hash1);
+    var fragment2 = hashFragment(shift, hash2);
+    return new IndexedNode(toBitmap(fragment1) | toBitmap(fragment2), (fragment1 === fragment2
+        ? [combineLeafNodes(shift + SIZE, hash1, leafNode1, hash2, leafNode2)]
+        : fragment1 < fragment2 ? [leafNode1, leafNode2] : [leafNode2, leafNode1]));
+}
+
+var LeafNode = (function () {
+    function LeafNode(hash, key, value) {
+        this.type = NodeType.LEAF;
+        this.hash = hash;
+        this.key = key;
+        this.value = value;
+    }
+    LeafNode.prototype.modify = function (shift, get, hash, key, size) {
+        if (key === this.key) {
+            var value_1 = get(this.value);
+            if (value_1 === this.value)
+                return this;
+            if (value_1 === NOTHING) {
+                --size.value;
+                return empty();
+            }
+            return new LeafNode(hash, key, value_1);
+        }
+        var value = get();
+        if (value === NOTHING)
+            return this;
+        ++size.value;
+        return combineLeafNodes(shift, this.hash, this, hash, new LeafNode(hash, key, value));
+    };
+    return LeafNode;
+}());
+
+var EmptyNode = (function () {
+    function EmptyNode() {
+        this.type = NodeType.EMPTY;
+    }
+    EmptyNode.prototype.modify = function (shift, get, hash, key, size) {
+        var value = get(void shift);
+        if (value === NOTHING)
+            return this;
+        ++size.value;
+        return new LeafNode(hash, key, value);
+    };
+    return EmptyNode;
+}());
+var EMPTY = new EmptyNode();
+function empty() {
+    return EMPTY;
+}
+
 function getNode(map) {
     return map.node;
 }
@@ -2392,6 +2379,78 @@ function setKeyValue(key, value, map) {
     return setTree(newNode, size.value, map);
 }
 
+function iterator(node, f) {
+    return new HashMapIterator(lazyVisit(node, f, []));
+}
+var HashMapIterator = (function () {
+    function HashMapIterator(_iterate) {
+        this._iterate = _iterate;
+    }
+    HashMapIterator.prototype.next = function () {
+        if (!this._iterate)
+            return { done: true, value: null };
+        var _a = this._iterate, value = _a.value, rest = _a.rest;
+        this._iterate = continuation(rest);
+        return { done: false, value: value };
+    };
+    HashMapIterator.prototype[Symbol.iterator] = function () {
+        return this;
+    };
+    return HashMapIterator;
+}());
+var continuation = function (k) {
+    return k && lazyVisitChildren(k[0], k[1], k[2], k[3], k[4]);
+};
+function lazyVisit(node, f, k) {
+    switch (node.type) {
+        case NodeType.LEAF:
+            return { value: f(node), rest: k };
+        case NodeType.COLLISION:
+        case NodeType.ARRAY:
+        case NodeType.INDEX:
+            var children = node.children;
+            return lazyVisitChildren(children.length, children, 0, f, k);
+        default:
+            return continuation(k);
+    }
+}
+
+function lazyVisitChildren(length, children, index, f, k) {
+    while (index < length) {
+        var child = children[index++];
+        if (child && notEmptyNode(child))
+            return lazyVisit(child, f, [length, children, index, f, k]);
+    }
+    return continuation(k);
+}
+
+function notEmptyNode(node) {
+    return node && node.type !== NodeType.EMPTY;
+}
+
+function entries(map) {
+    return iterator(getNode(map), nodeEntries);
+}
+function nodeEntries(node) {
+    return [node.key, node.value];
+}
+
+var HashMap = (function () {
+    function HashMap(node, size) {
+        this.node = node;
+        this.size = size;
+    }
+    HashMap.prototype[Symbol.iterator] = function () {
+        return entries(this);
+    };
+    return HashMap;
+}());
+
+var EMPTY_MAP = new HashMap(EMPTY, 0);
+function empty$1() {
+    return EMPTY_MAP;
+}
+
 function get(key, map) {
     var hash = findHash(key);
     if (map)
@@ -2446,7 +2505,7 @@ function curry3(fn) {
 var set = curry3(setKeyValue);
 
 function fromArray(array) {
-    var map = empty$$1();
+    var map = empty$1();
     for (var i = 0; i < array.length; ++i) {
         var _a = array[i], key = _a[0], value = _a[1];
         map = set(key, value, map);
@@ -2458,7 +2517,7 @@ function fromIterable(iterable) {
 }
 function fromObject(object) {
     var keys = Object.keys(object);
-    var map = empty$$1();
+    var map = empty$1();
     for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
         var value = object[key];
@@ -2479,8 +2538,22 @@ function remove$1(key, map) {
     };
 }
 
+function keys$2(map) {
+    return iterator(getNode(map), nodeKeys);
+}
+function nodeKeys(node) {
+    return node.key;
+}
+
+function values(map) {
+    return iterator(getNode(map), nodeValues);
+}
+function nodeValues(node) {
+    return node.value;
+}
+
 exports.HashMap = HashMap;
-exports.empty = empty$$1;
+exports.empty = empty$1;
 exports.get = get;
 exports.has = has;
 exports.set = set;
@@ -2489,6 +2562,9 @@ exports.fromIterable = fromIterable;
 exports.fromObject = fromObject;
 exports.size = size;
 exports.remove = remove$1;
+exports.entries = entries;
+exports.keys = keys$2;
+exports.values = values;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
