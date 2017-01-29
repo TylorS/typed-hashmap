@@ -26,10 +26,10 @@ npm install --save @typed/hashmap
 ## Todo
 
 - [x] `remove<K, V>(key: K, map: HashMap<K, V>): HashMap<K, V>`
-- [ ] Implement Iterable interface
-- [ ] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;`
-- [ ] `keys<K, V>(map: HashMap<K, V>): Array<K>;`
-- [ ] `values<K, V>(map: HashMap<K, V>): Array<V>;`
+- [x] Implement Iterable interface
+- [x] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;`
+- [x] `keys<K, V>(map: HashMap<K, V>): Array<K>;`
+- [x] `values<K, V>(map: HashMap<K, V>): Array<V>;`
 - [ ] `reduce<K, V, R>(f: (seed: R, value: V) => R, seed: R, map: HashMap<K, V>): R;`
 - [ ] `map<K, V, R>(f: (value: V) => R, map: HashMap<K, V>): HashMap<K, R>;`
 
@@ -154,4 +154,64 @@ const hasB = has('b')
 
 hasB(map) // true
 hasB(remove('b', map)) // false
+```
+
+#### `entries<K, V>(map: HashMap<K, V>): Iterator<[K, V]>`
+
+Guaranteeing no order creates an iterator of keys and values held within
+a given HashMap.
+
+```typescript
+import { entries, fromObject } from '@typed/hashmap';
+
+const map = fromObject({ a: 1, b: 2, c: 3 })
+
+for (let entry of entries(map)) {
+  console.log(entry) // ['a', 1] ['b', 2] ['c' 3]
+}
+
+// manually using iterator
+
+const iterator = entries(map)
+
+console.log(iterator.next().value) // ['a', 1]
+console.log(iterator.next().value) // ['c', 3]
+console.log(iterator.next().value) // ['b', 2]
+console.log(iterator.next().value) // null
+```
+
+#### `keys<K, V>(map: HashMap<K, V>): Iterator<K>`
+
+Guaranteeing no order creates an iterator of keys held within
+a given HashMap.
+
+```typescript
+import { keys, fromArray } from '@typed/hashmap';
+
+const map = fromArray([ ['a', 1], ['b', 2], ['c', 3] ])
+
+const iterator = keys(map)
+
+console.log(iterator.next().value) // 'a'
+console.log(iterator.next().value) // 'b'
+console.log(iterator.next().value) // 'c'
+console.log(iterator.next().value) // null
+```
+
+#### `values<K, V>(map: HashMap<K, V>): Iterator<V>`
+
+Guaranteeing no order creates an iterator of keys held within
+a given HashMap.
+
+```typescript
+import { keys, fromArray } from '@typed/hashmap';
+
+const map = fromArray([ ['a', 1], ['b', 2], ['c', 3] ])
+
+const iterator = keys(map)
+
+console.log(iterator.next().value) // 1
+console.log(iterator.next().value) // 2
+console.log(iterator.next().value) // 3
+console.log(iterator.next().value) // null
 ```
