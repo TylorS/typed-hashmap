@@ -1,8 +1,8 @@
-import { IEmptyNode, Node, NodeType } from './types';
+import { Empty, Node, NodeType } from './types';
 import { NOTHING } from './constants';
 import { LeafNode } from './LeafNode';
 
-export class EmptyNode<K, V> implements IEmptyNode<K, V> {
+export class EmptyNode<K, V> implements Empty<K, V> {
   public type: NodeType.EMPTY = NodeType.EMPTY;
 
   public modify(
@@ -24,6 +24,6 @@ export class EmptyNode<K, V> implements IEmptyNode<K, V> {
 
 export const EMPTY = new EmptyNode<any, any>();
 
-export function empty<K, V>(): EmptyNode<K, V> {
+export function empty<K, V>(): Empty<K, V> {
   return EMPTY;
 }

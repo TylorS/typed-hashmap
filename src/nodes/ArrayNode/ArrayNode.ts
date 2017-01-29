@@ -1,9 +1,9 @@
-import { NodeType, IArrayNode, Node } from '../types';
+import { NodeType, ListNode, Node, ChildrenNodes, ChildNode } from '../types';
 import { empty } from '../EmptyNode';
 import { SIZE, MIN_ARRAY_NODE, replace, hashFragment } from '../../common';
 import { toIndexNode } from './toIndexNode';
 
-export class ArrayNode<K, V> implements IArrayNode<K, V> {
+export class ArrayNode<K, V> implements ListNode<K, V> {
   public type: NodeType.ARRAY = NodeType.ARRAY;
   public size: number;
   public children: Array<Node<K, V>>;
@@ -23,7 +23,8 @@ export class ArrayNode<K, V> implements IArrayNode<K, V> {
     const { size: count, children } = this;
     const fragment = hashFragment(shift, hash);
     const child = children[fragment];
-    const newChild = (child || empty<K, V>()).modify(shift + SIZE, get, hash, key, size);
+    const newChild =
+      (child || empty<K, V>()).modify(shift + SIZE, get, hash, key, size);
 
     if (child === newChild)
       return this;

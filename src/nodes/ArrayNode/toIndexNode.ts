@@ -1,4 +1,4 @@
-import { Node, NodeType } from '../types';
+import { NodeType, Node } from '../types';
 import { IndexedNode } from '../IndexedNode';
 
 export function toIndexNode<K, V>(

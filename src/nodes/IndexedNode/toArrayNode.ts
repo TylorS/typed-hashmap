@@ -1,13 +1,13 @@
-import { Node } from '../types';
+import { ChildNode, ChildrenNodes } from '../types';
 import { ArrayNode } from '../ArrayNode';
 
 export function toArrayNode<K, V>(
   fragment: number,
-  child: Node<K, V>,
+  child: ChildNode<K, V>,
   bitmap: number,
-  children: Array<Node<K, V>>)
+  children: ChildrenNodes<K, V>)
 {
-  const array = [];
+  const array: ChildrenNodes<K, V> = [];
   let bit = bitmap;
   let count = 0;
 

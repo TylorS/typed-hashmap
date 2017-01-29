@@ -1,4 +1,4 @@
-import { IIndexedNode, Node, NodeType } from '../types';
+import { Indexed, Node, NodeType, ChildrenNodes, ChildNode } from '../types';
 import { empty } from '../EmptyNode';
 import { LeafNode } from '../LeafNode';
 import {
@@ -13,12 +13,12 @@ import {
 } from '../../common';
 import { toArrayNode } from './toArrayNode';
 
-export class IndexedNode<K, V> implements IIndexedNode<K, V> {
+export class IndexedNode<K, V> implements Indexed<K, V> {
   public type: NodeType.INDEX = NodeType.INDEX;
   public mask: number;
-  public children: Array<Node<K, V>>;
+  public children: ChildrenNodes<K, V>;
 
-  constructor(mask: number, children: Array<Node<K, V>>) {
+  constructor(mask: number, children: ChildrenNodes<K, V>) {
     this.mask = mask;
     this.children = children;
   }
@@ -36,7 +36,7 @@ export class IndexedNode<K, V> implements IIndexedNode<K, V> {
     const index: number = bitmapToIndex(mask, bit);
     const exists: boolean = Boolean(mask & bit);
     const current: Node<K, V> = exists ? children[index] : empty<K, V>();
-    const child = (current as LeafNode<K, V>).modify(shift + SIZE, get, hash, key, size);
+    const child = current.modify(shift + SIZE, get, hash, key, size) as ChildNode<K, V>;
 
     if (current === child)
       return this;

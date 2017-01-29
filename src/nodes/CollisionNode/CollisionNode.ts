@@ -1,9 +1,9 @@
-import { ICollisionNode, NodeType, Node } from '../types';
+import { Collision, NodeType, Node } from '../types';
 import { NOTHING } from '../constants';
 import { LeafNode, combineLeafNodes } from '../LeafNode';
 import { newCollisionList } from './newCollisionList';
 
-export class CollisionNode<K, V> implements ICollisionNode<K, V> {
+export class CollisionNode<K, V> implements Collision<K, V> {
   public type: NodeType.COLLISION = NodeType.COLLISION;
 
   public hash: number;

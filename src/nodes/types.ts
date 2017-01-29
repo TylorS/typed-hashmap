@@ -1,9 +1,9 @@
 export type Node<K, V>
-  = IEmptyNode<K, V>
-  | ILeafNode<K, V>
-  | ICollisionNode<K, V>
-  | IIndexedNode<K, V>
-  | IArrayNode<K, V>;
+  = Empty<K, V>
+  | Leaf<K, V>
+  | Collision<K, V>
+  | Indexed<K, V>
+  | ListNode<K, V>;
 
 export type Modify<K, V> =
   (shift: number,
@@ -12,12 +12,17 @@ export type Modify<K, V> =
    key: K,
    size: { value: number }) => Node<K, V>;
 
-export interface IEmptyNode<K, V> {
+export type ChildNode<K, V> =
+  Empty<K, V> | Leaf<K, V>;
+
+export type ChildrenNodes<K, V> = Array<ChildNode<K, V>>;
+
+export interface Empty<K, V> {
   type: NodeType.EMPTY;
   modify: Modify<K, V>;
 }
 
-export interface ILeafNode<K, V> {
+export interface Leaf<K, V> {
   type: NodeType.LEAF;
   hash: number;
   key: K;
@@ -25,21 +30,21 @@ export interface ILeafNode<K, V> {
   modify: Modify<K, V>;
 }
 
-export interface ICollisionNode<K, V> {
+export interface Collision<K, V> {
   type: NodeType.COLLISION;
   hash: number;
-  children: Array<Node<K, V>>;
+  children: Array<Leaf<K, V>>;
   modify: Modify<K, V>;
 }
 
-export interface IIndexedNode<K, V> {
+export interface Indexed<K, V> {
   type: NodeType.INDEX;
   mask: number;
-  children: Array<Node<K, V>>;
+  children: ChildrenNodes<K, V>;
   modify: Modify<K, V>;
 }
 
-export interface IArrayNode<K, V> {
+export interface ListNode<K, V> {
   type: NodeType.ARRAY;
   size: number;
   children: Array<Node<K, V>>;

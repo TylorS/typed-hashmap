@@ -1,9 +1,9 @@
-import { Node, NodeType, ILeafNode } from '../types';
+import { Node, NodeType, Leaf } from '../types';
 import { NOTHING } from '../constants';
 import { empty } from '../EmptyNode';
 import { combineLeafNodes } from './combineLeafNodes';
 
-export class LeafNode<K, V> implements ILeafNode<K, V> {
+export class LeafNode<K, V> implements Leaf<K, V> {
   public type: NodeType.LEAF = NodeType.LEAF;
   public hash: number;
   public key: K;
