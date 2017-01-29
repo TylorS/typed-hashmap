@@ -25,7 +25,7 @@ npm install --save @typed/hashmap
 
 ## Todo
 
-- [ ] `remove<K, V>(key: K, map: HashMap<K, V>): HashMap<K, V>`
+- [x] `remove<K, V>(key: K, map: HashMap<K, V>): HashMap<K, V>`
 - [ ] Implement Iterable interface
 - [ ] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;`
 - [ ] `keys<K, V>(map: HashMap<K, V>): Array<K>;`
@@ -139,4 +139,19 @@ import { size, empty, fromObject } from '@typed/hashmap';
 
 size(empty()) // 0
 size(fromObject({ a: 1, b: 2 })) // 2
+```
+
+#### `remove<K, V>(key: K, map: HashMap<K, V>): HashMap<K ,V>`
+
+Returns a HashMap that no longer contains a value for `key`.
+
+```typescript
+import { remove, fromObject, has } from '@typed/hashmap';
+
+const map = fromObject({ a: 1, b: 2, c: 3})
+
+const hasB = has('b')
+
+hasB(map) // true
+hasB(remove('b', map)) // false
 ```
