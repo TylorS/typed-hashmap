@@ -1,3 +1,10 @@
+# 0.3.0 (2017-01-29)
+---
+
+## Features
+
+- feat(HashMap): implement iteration over HashMap [a5bd7ffc](https://github.com/TylorS/typed-hashmap/commits/a5bd7ffcd3f84d8d24fd1354df99f76ce233844b)
+
 # 0.2.0 (2017-01-29)
 ---
 
