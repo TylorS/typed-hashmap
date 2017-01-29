@@ -1,3 +1,10 @@
+# 0.2.0 (2017-01-29)
+---
+
+## Features
+
+- feat(remove): implement `remove` [589eb69a](https://github.com/TylorS/typed-hashmap/commits/589eb69a2214804e5f7fbe7438e8b6e2d03e39c5)
+
 # 0.1.1 (2017-01-29)
 ---
 
