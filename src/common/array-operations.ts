@@ -26,13 +26,13 @@ export function remove<T>(index: number, array: Array<T>): Array<T> {
 
   const newArray = Array(length - 1);
 
-  let i: number;
+  let i = 0;
 
-  for (i = 0; i < index; ++ i)
+  for (; i < index; ++i)
     newArray[i] = array[i];
 
-  for (i = index; i < length; ++i)
-    newArray[i] = array[i + 1];
+  for (i = i + 1; i < length; ++i)
+    newArray[i - 1] = array[i];
 
   return newArray;
 }

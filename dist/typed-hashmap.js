@@ -47,11 +47,11 @@ function remove(index, array) {
     if (length === 1)
         return [];
     var newArray = Array(length - 1);
-    var i;
-    for (i = 0; i < index; ++i)
+    var i = 0;
+    for (; i < index; ++i)
         newArray[i] = array[i];
-    for (i = index; i < length; ++i)
-        newArray[i] = array[i + 1];
+    for (i = i + 1; i < length; ++i)
+        newArray[i - 1] = array[i];
     return newArray;
 }
 /**
@@ -2471,6 +2471,14 @@ function size(map) {
     return getSize(map);
 }
 
+function remove$1(key, map) {
+    if (map)
+        return setKeyValue(key, NOTHING, map);
+    return function (_map) {
+        return setKeyValue(key, NOTHING, _map);
+    };
+}
+
 exports.HashMap = HashMap;
 exports.empty = empty$$1;
 exports.get = get;
@@ -2480,6 +2488,7 @@ exports.fromArray = fromArray;
 exports.fromIterable = fromIterable;
 exports.fromObject = fromObject;
 exports.size = size;
+exports.remove = remove$1;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
