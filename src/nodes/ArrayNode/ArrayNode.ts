@@ -41,5 +41,5 @@ export class ArrayNode<K, V> implements IArrayNode<K, V> {
 }
 
 function isEmptyNode(node: Node<any, any>): boolean {
-  return node.type === NodeType.EMPTY;
+  return node && node.type === NodeType.EMPTY;
 }

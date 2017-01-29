@@ -49,7 +49,7 @@ export function insert<T>(index: number, value: T, array: Array<T>): Array<T> {
   for (; i < index; ++i)
     newArray[i] = array[i];
 
-  newArray[++i] = value;
+  newArray[i++] = value;
 
   for (; i < length; ++i)
     newArray[i] = array[i - 1];

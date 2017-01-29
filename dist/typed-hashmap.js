@@ -63,7 +63,7 @@ function insert(index, value, array) {
     var i = 0;
     for (; i < index; ++i)
         newArray[i] = array[i];
-    newArray[++i] = value;
+    newArray[i++] = value;
     for (; i < length; ++i)
         newArray[i] = array[i - 1];
     return newArray;
@@ -189,7 +189,7 @@ var ArrayNode = (function () {
     return ArrayNode;
 }());
 function isEmptyNode(node) {
-    return node.type === NodeType.EMPTY;
+    return node && node.type === NodeType.EMPTY;
 }
 
 function toArrayNode(fragment, child, bitmap, children) {
