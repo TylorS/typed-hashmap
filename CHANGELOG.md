@@ -1,3 +1,10 @@
+# 0.1.1 (2017-01-29)
+---
+
+## Bug Fixes
+
+- fix(HashMap): fix larger hashmap algo [2aa18747](https://github.com/TylorS/typed-hashmap/commits/2aa18747632e2bbbe7b626d39a06b8b21a8e7ad4)
+
 # 0.1.0 (2017-01-22)
 ---
 
