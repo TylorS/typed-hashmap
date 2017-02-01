@@ -23,18 +23,6 @@ There is more to be done but the bare minimum is definitely present.
 npm install --save @typed/hashmap
 ```
 
-## Todo
-
-- [x] `remove<K, V>(key: K, map: HashMap<K, V>): HashMap<K, V>`
-- [x] Implement Iterable interface
-- [x] `entries<K, V>(map: HashMap<K, V>): Array<[K, V]>;`
-- [x] `keys<K, V>(map: HashMap<K, V>): Array<K>;`
-- [x] `values<K, V>(map: HashMap<K, V>): Array<V>;`
-- [ ] `reduce<K, V, R>(f: (seed: R, value: V) => R, seed: R, map: HashMap<K, V>): R;`
-- [ ] `map<K, V, R>(f: (value: V) => R, map: HashMap<K, V>): HashMap<K, R>;`
-
-- [ ] Create `flow` typings for flowtype users (help wanted!)
-
 ## API
 
 All multi-parameter functions are curried!
