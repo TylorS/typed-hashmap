@@ -2428,6 +2428,30 @@ function notEmptyNode(node) {
     return node && node.type !== NodeType.EMPTY;
 }
 
+function fold(f, seed, map) {
+    var node = getNode(map);
+    if (node.type === NodeType.EMPTY)
+        return seed;
+    if (node.type === NodeType.LEAF)
+        return f(seed, node.value, node.key);
+    var nodesToVisit = [node.children];
+    var children;
+    while (children = nodesToVisit.shift()) {
+        for (var i = 0; i < children.length; ++i) {
+            var child = children[i];
+            if (!child)
+                continue;
+            if (child.type === NodeType.EMPTY)
+                continue;
+            else if (child.type === NodeType.LEAF)
+                seed = f(seed, child.value, child.key);
+            else
+                nodesToVisit.push(child.children);
+        }
+    }
+    return seed;
+}
+
 function entries(map) {
     return iterator(getNode(map), nodeEntries);
 }
@@ -2552,6 +2576,27 @@ function nodeValues(node) {
     return node.value;
 }
 
+var reduce = curry3(fold);
+
+var forEach = curry2(function forEach(f, map) {
+    reduce(function (_, value, key) { return f(value, key); }, null, map);
+    return map;
+});
+
+var filter = curry2(function filter(predicate, hashmap) {
+    return reduce(function (newMap, value, key) {
+        return predicate(value, key)
+            ? set(key, value, newMap)
+            : newMap;
+    }, empty$1(), hashmap);
+});
+
+var map = curry2(function map(f, hashmap) {
+    return reduce(function (newMap, value, key) {
+        return set(key, f(value, key), newMap);
+    }, empty$1(), hashmap);
+});
+
 exports.HashMap = HashMap;
 exports.empty = empty$1;
 exports.get = get;
@@ -2565,6 +2610,10 @@ exports.remove = remove$1;
 exports.entries = entries;
 exports.keys = keys$2;
 exports.values = values;
+exports.reduce = reduce;
+exports.forEach = forEach;
+exports.filter = filter;
+exports.map = map;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
