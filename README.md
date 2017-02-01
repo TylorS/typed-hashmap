@@ -2,7 +2,7 @@
 
 > Immutable HashMap for TypeScript
 
-A fast and persistent (immutable) Hash Array Map Table for TypeScript.
+A fast and persistent (immutable) Hash Array Map Trie for TypeScript.
 
 This is heavily based off of [hamt](https://github.com/mattbierner/hamt) and
 was mainly done by me for learning purposes, but it is likely very useful, and I
@@ -214,4 +214,62 @@ console.log(iterator.next().value) // 1
 console.log(iterator.next().value) // 2
 console.log(iterator.next().value) // 3
 console.log(iterator.next().value) // null
+```
+
+#### `reduce<K, V, R>(f: (accum: R, value: V, key?: K) => R, seed: R, map: HashMap<K, V>): R`
+
+Fold over the values held in a HashMap, similar to `Array.prototype.reduce`.
+
+```typescript
+import { reduce, fromIterable } from '@typed/hashmap';
+
+const iterable = new Map([ [1, 1], [2, 2], [3, 3] ]);
+
+const map = fromIterable(iterable);
+
+const sum = (x: number, y: number) => x + y;
+
+console.log(reduce(sum, 0, map)) // 6
+```
+
+#### `forEach<K, V>(f: (value: V, key?: K) => any, map: HashMap<K, V>): HashMap<K, V>`
+
+Perform side effects on each value contained in a HashMap, returning the original
+HashMap.
+
+```typescript
+import { forEach, fromObject } from '@typed/hashmap';
+
+const map = fromObject({ a: 1, b: 2, c: 3 })
+
+const map2 = forEach(x => console.log(x), map) // 1, 2, 3
+
+map === map2 // true
+```
+
+#### `map<K, V, R>(f: (value: V, key?: K) => R, map: HashMap<K, V>): HashMap<K, R>;`
+
+Creates a new HashMap of the same keys, but new values as the result of calling
+the provided function on each value contained in the given HashMap, similar to
+`Array.prototype.map`.
+
+```typescript
+import { map, forEach, fromObject } from '@typed/hashmap';
+
+const a = map(x => x + 1, fromObject({ a: 1, b: 2, c: 3 }))
+
+forEach((value, key) => console.log(value, key), a) // 'a' 2 , 'b' 3, 'c' 4
+```
+
+#### `filter<K, V>(predicate: (value: V, key?: K) => boolean, map: HashMap<K, V>): HashMap<K, V>`
+
+Creates a new HashMap containing only values that return `true` when the predicate
+function is called with a given value, similar to `Array.prototype.filter`.
+
+```typescript
+import { filter, forEach, fromObject } from '@typed/hashmap';
+
+const a = filter(x => x % 2 === 0, fromObject({ a: 1, b: 2, c: 3 }))
+
+forEach((value, key) => console.log(value, key), a) // 'b' 2
 ```
