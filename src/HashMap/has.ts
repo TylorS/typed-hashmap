@@ -1,9 +1,10 @@
-import { NOTHING } from '../nodes';
-import { HashMap } from './HashMap';
-import { getHash, findHash } from './primitives';
+import { findHash, getHash } from './primitives';
 
-export function has<K, V>(key: K, map: HashMap<K, V>): K | null;
-export function has<K, V>(key: K): (map: HashMap<K, V>) => K | null;
+import { HashMap } from './HashMap';
+import { NOTHING } from '../nodes';
+
+export function has<K, V>(key: K, map: HashMap<K, V>): boolean;
+export function has<K, V>(key: K): (map: HashMap<K, V>) => boolean;
 
 export function has<K, V>(key: K, map?: HashMap<K, V>) {
   const hash = findHash(key);
