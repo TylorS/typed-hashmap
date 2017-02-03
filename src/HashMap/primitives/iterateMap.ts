@@ -1,13 +1,13 @@
-import { Node, Leaf, NodeType } from '../../nodes';
+import { Leaf, Node, NodeType } from '../../nodes';
 
 export function iterator<K, V, R>(
   node: Node<K, V>,
-  f: (leaf: Leaf<K, V>) => R): Iterator<R> {
+  f: (leaf: Leaf<K, V>) => R): IterableIterator<R> {
 
   return new HashMapIterator<K, V, R>(lazyVisit(node, f, []));
 }
 
-class HashMapIterator<K, V, R> implements Iterator<R> {
+class HashMapIterator<K, V, R> implements IterableIterator<R> {
   constructor(private _iterate: { value: R, rest: Array<any> }) { }
 
   public next(): IteratorResult<R> {
