@@ -1,3 +1,11 @@
+# 1.0.1 (2017-02-03)
+---
+
+## Bug Fixes
+
+- fix(iterator): fix iterator methods type-signature [bd6ab901](https://github.com/TylorS/typed-hashmap/commits/bd6ab901ddfb5ec00e5d5805dc264bb2ecffa650)
+- fix(has): fix the type signature [2ba292d1](https://github.com/TylorS/typed-hashmap/commits/2ba292d19848a2f187aa05f630129e328b0b8b02)
+
 # 0.3.0 (2017-01-29)
 ---
 
