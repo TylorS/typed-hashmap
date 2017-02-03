@@ -1,6 +1,6 @@
 {
   "name": "@typed/hashmap",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Immutable Hash Map in TypeScript",
   "main": "dist/typed-hashmap.js",
   "jsnext:main": "lib.es2015/index.js",
