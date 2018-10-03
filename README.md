@@ -196,7 +196,7 @@ import { keys, fromArray } from '@typed/hashmap';
 
 const map = fromArray([ ['a', 1], ['b', 2], ['c', 3] ])
 
-const iterator = keys(map)
+const iterator = values(map)
 
 console.log(iterator.next().value) // 1
 console.log(iterator.next().value) // 2
